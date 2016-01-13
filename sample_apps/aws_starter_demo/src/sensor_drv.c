@@ -50,7 +50,7 @@ int sensor_msg_construct(char *src, char *dest, int len)
 					curevent->property,
 					curevent->event_curr_value);
 
-			wmprintf("Constructed Sensor msg: %s\r\n", dest);
+			/*wmprintf("%p Constructed Sensor msg: %s\r\n", curevent, dest);*/
 			strcat(src, dest);
 		}
 		/* point to next sensor event data */

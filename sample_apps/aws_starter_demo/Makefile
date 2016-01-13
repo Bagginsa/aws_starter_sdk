@@ -6,6 +6,7 @@ exec-y += aws_starter_demo
 aws_starter_demo-objs-y := src/main.c
 aws_starter_demo-objs-y += src/sensor_drv.c
 aws_starter_demo-objs-y += src/sensor_tempr_drv.c
+aws_starter_demo-objs-y += src/sensor_occ_drv.c
 
 aws_starter_demo-cflags-y := -I$(d)/src -DAPPCONFIG_DEBUG_ENABLE=1
 

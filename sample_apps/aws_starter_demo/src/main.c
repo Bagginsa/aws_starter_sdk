@@ -38,6 +38,7 @@
 #include "aws_starter_root_ca_cert.h"
 #include "sensor_drv.h"
 #include "sensor_tempr_drv.h"
+#include "sensor_occ_drv.h"
 
 enum state {
 	AWS_CONNECTED = 1,
@@ -482,6 +483,7 @@ int main()
 	if (retval == WM_SUCCESS) {
 		/* Register a custom sensor here...*/
 		temperature_sensor_event_register();
+		occupancy_sensor_event_register();
 	}
 	/* This api adds aws iot configuration support in web application.
 	 * Configuration details are then stored in persistent memory.
