@@ -36,6 +36,7 @@
 #include <aws_iot_config.h>
 
 #include "aws_starter_root_ca_cert.h"
+#include "sensor_drv.h"
 
 enum state {
 	AWS_CONNECTED = 1,
@@ -75,7 +76,7 @@ static char url[128];
 #define VAR_BUTTON_A_PROPERTY   "pb"
 #define VAR_BUTTON_B_PROPERTY   "pb_lambda"
 #define RESET_TO_FACTORY_TIMEOUT 5000
-#define BUFSIZE                  128
+#define BUFSIZE                  512
 
 /* callback function invoked on reset to factory */
 static void device_reset_to_factory_cb()
@@ -267,6 +268,10 @@ int aws_publish_property_state(ShadowParameters_t *sp)
 	int ret = WM_SUCCESS;
 
 	memset(state, 0, BUFSIZE);
+
+	/* Construct JSON object for sensor events */
+	sensor_msg_construct(state, buf_out, BUFSIZE);
+
 	if (pushbutton_a_count_prev != pushbutton_a_count) {
 		snprintf(buf_out, BUFSIZE, ",\"%s\":%d", VAR_BUTTON_A_PROPERTY,
 			 pushbutton_a_count);
@@ -378,6 +383,9 @@ static void aws_starter_demo(os_thread_arg_t data)
 			wmprintf("Sending property failed\r\n");
 
 		os_thread_sleep(1000);
+
+		/* periodically scan the sensor intpus */
+		sensor_inputs_scan();
 	}
 
 	ret = aws_iot_shadow_disconnect(&mqtt_client);
@@ -447,6 +455,8 @@ void wlan_event_normal_connected(void *data)
 
 int main()
 {
+	int retval;
+
 	/* initialize the standard input output facility over uart */
 	if (wmstdio_init(UART0_ID, 0) != WM_SUCCESS) {
 		return -WM_FAIL;
@@ -466,6 +476,11 @@ int main()
 	/* configure led and pushbutton to communicate with cloud */
 	configure_led_and_button();
 
+	/* Initialize a sensor driver */
+	retval = sensor_drv_init();
+	if (retval == WM_SUCCESS) {
+		/* Register a custom sensor here...*/
+	}
 	/* This api adds aws iot configuration support in web application.
 	 * Configuration details are then stored in persistent memory.
 	 */
