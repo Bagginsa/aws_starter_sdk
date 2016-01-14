@@ -55,7 +55,11 @@ int temperature_sensor_init(struct sensor_info *curevent)
 {
 	wmprintf("%s\r\n", __FUNCTION__);
 
-#if 0
+	if (adc_drv_init(ADC0_ID) != WM_SUCCESS) {
+		wmprintf("Error: Cannot init ADC\n\r");
+		return -1;
+	}
+
 #if defined(CONFIG_CPU_MW300)
 	int i;
 
@@ -81,7 +85,6 @@ int temperature_sensor_init(struct sensor_info *curevent)
 	wmprintf("Modified ADC gain value to %d\r\n", config.adcGainSel);
 
 	return 0;
-#endif
 }
 
 /* Function to read ADC */
@@ -131,11 +134,8 @@ int temperature_sensor_input_scan(struct sensor_info *curevent)
 	/* wmprintf("%s\r\n", __FUNCTION__); */
 
 	/* Read ADC value as current sensor value */
-	//curevent->event_curr_value = getData();
+	curevent->event_curr_value = getData();
 
-	/* for testing purpose only,
-		disable this line getData is functional*/
-	curevent->event_curr_value++;
 	return 0;
 }
 
