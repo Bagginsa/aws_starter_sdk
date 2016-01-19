@@ -33,6 +33,10 @@
 /* Default is IO mode, DMA mode can be enabled as per the requirement */
 /*#define ADC_DMA*/
 
+/* Thread handle */
+static os_thread_t temperature_thread;
+/* Buffer to be used as stack */
+static os_thread_stack_define(temperature_stack, 2 * 1024);
 
 /*-----------------------Global declarations----------------------*/
 uint16_t buffer[SAMPLES];
@@ -40,6 +44,8 @@ mdev_t *adc_dev;
 int i, samples = SAMPLES;
 float result;
 ADC_CFG_Type config;
+int dataready_flag = 0;
+int dataready;
 
 /*
  *********************************************************
@@ -47,51 +53,12 @@ ADC_CFG_Type config;
  **********************************************************
  */
 
-/* Basic Sensor IO initialization to be done here
-
-	This function will be called only once during sensor registration
- */
-int temperature_sensor_init(struct sensor_info *curevent)
-{
-	wmprintf("%s\r\n", __FUNCTION__);
-
-	if (adc_drv_init(ADC0_ID) != WM_SUCCESS) {
-		wmprintf("Error: Cannot init ADC\n\r");
-		return -1;
-	}
-
-#if defined(CONFIG_CPU_MW300)
-	int i;
-
-	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
-
-	i = adc_drv_selfcalib(adc_dev, vref_internal);
-	if (i == WM_SUCCESS)
-		wmprintf("Calibration successful!\r\n");
-	else
-		wmprintf("Calibration failed!\r\n");
-
-	adc_drv_close(adc_dev);
-#endif
-
-	/* get default ADC gain value */
-//	adc_get_config(&config);
-	wmprintf("Default ADC gain value = %d\r\n", config.adcGainSel);
-
-	/* Modify ADC gain to 2 */
-	adc_modify_default_config(adcGainSel, ADC_GAIN);
-
-	adc_get_config(&config);
-	wmprintf("Modified ADC gain value to %d\r\n", config.adcGainSel);
-
-	return 0;
-}
-
 /* Function to read ADC */
 int getData(void)
 {
 	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
 	
+	wmprintf("%s\r\n", __FUNCTION__);
 #ifdef ADC_DMA
 	adc_drv_get_samples(adc_dev, buffer, samples);
 		result = ((float)buffer[i] / BIT_RESOLUTION_FACTOR) *
@@ -116,6 +83,125 @@ int getData(void)
 	return result;
 }
 
+/* This thread reads sensor data periodically and
+	reports the change to the AWS cloud */
+
+static void temperature_sense_task(os_thread_arg_t data)
+{
+	#define	ITERATIONS	10
+	int olddata1, olddata2, olddata3, avgdata, reporteddata;
+	int i, tdata[ITERATIONS];
+	int count;
+
+	wmprintf("%s\r\n", __FUNCTION__);
+	/* clear a buffer */
+	for (i = 0; i < ITERATIONS; i++)
+		tdata[i] = 0;
+
+	count = 0;
+	olddata1 = 0;
+	olddata2 = 0;
+	olddata3 = 0;
+	reporteddata= 0;
+	while(1) {
+		/* Read ADC value ITERATIONS times*/ 
+		tdata[count++]= getData();
+
+		if (count < ITERATIONS) {
+			count = 0;
+
+			/* calcluate avg value */
+			avgdata = 0;
+			for (i = 0; i < ITERATIONS; i++)
+				avgdata += tdata[i];
+
+			avgdata /= ITERATIONS;
+
+			/* push it in FIFO */
+			olddata3 = olddata2;
+			olddata2 = olddata1;
+			olddata1 = avgdata;
+
+			/* Report data to the cloud, if stable and not the same
+				as reported earlier */
+			if ((olddata1 == olddata2) &&
+				(olddata2 == olddata3) &&
+				(olddata1 != reporteddata)) {
+
+				dataready = olddata1;
+				dataready_flag = 1;
+				reporteddata = olddata1;
+			}
+		}
+
+		/* Sensor will be polled after each 10 miliseconds */
+		os_thread_sleep(10);
+	}
+}
+
+/* Basic Sensor IO initialization to be done here
+
+	This function will be called only once during sensor registration
+ */
+int temperature_sensor_init(struct sensor_info *curevent)
+{
+	int ret;
+
+	wmprintf("%s\r\n", __FUNCTION__);
+
+	/* create a temperature thread in which you can read sensor data
+		out of context of AWS framework */
+	ret = os_thread_create(
+		/* thread handle */
+		&temperature_thread,
+		/* thread name */
+		"Temperature_Tr",
+		/* entry function */
+		temperature_sense_task,
+		/* argument */
+		0,
+		/* stack */
+		&temperature_stack,
+		/* priority */
+		OS_PRIO_3);
+		
+	if (ret != WM_SUCCESS) {
+		wmprintf("Failed to start cloud_thread: %d\r\n", ret);
+		return ret;
+	}
+
+	if (adc_drv_init(ADC0_ID) != WM_SUCCESS) {
+		wmprintf("Error: Cannot init ADC\n\r");
+		return -1;
+	}
+
+#if defined(CONFIG_CPU_MW300)
+	int i;
+
+	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
+
+	i = adc_drv_selfcalib(adc_dev, vref_internal);
+	if (i == WM_SUCCESS)
+		wmprintf("Calibration successful!\r\n");
+	else
+		wmprintf("Calibration failed!\r\n");
+
+	adc_drv_close(adc_dev);
+#endif
+
+	/* get default ADC gain value */
+	adc_get_config(&config);
+	wmprintf("Default ADC gain value = %d\r\n", config.adcGainSel);
+
+	/* Modify ADC gain to 2 */
+	adc_modify_default_config(adcGainSel, ADC_GAIN);
+
+	adc_get_config(&config);
+	wmprintf("Modified ADC gain value to %d\r\n", config.adcGainSel);
+
+	return 0;
+}
+
 /* Sensor input from IO should be read here and to be passed
 	in curevent->event_curr_value variable to the upper layer
 
@@ -130,12 +216,12 @@ int getData(void)
 */
 int temperature_sensor_input_scan(struct sensor_info *curevent)
 {
-
-	/* wmprintf("%s\r\n", __FUNCTION__); */
-
-	/* Read ADC value as current sensor value */
-	curevent->event_curr_value = getData();
-
+	if (dataready_flag) {
+		 dataready_flag = 1;
+		/* Report changed temperature value to the AWS cloud */
+		curevent->event_curr_value = dataready;
+		wmprintf("Reporting Temperature value %d\r\n", dataready);
+	}
 	return 0;
 }
 
