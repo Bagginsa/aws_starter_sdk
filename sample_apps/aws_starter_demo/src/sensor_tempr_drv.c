@@ -36,11 +36,11 @@
 /* Thread handle */
 static os_thread_t temperature_thread;
 /* Buffer to be used as stack */
-static os_thread_stack_define(temperature_stack, 2 * 1024);
+static os_thread_stack_define(temperature_stack, 4 * 1024);
 
 /*-----------------------Global declarations----------------------*/
 uint16_t buffer[SAMPLES];
-mdev_t *adc_dev;
+mdev_t *adc_dev = NULL;
 int i, samples = SAMPLES;
 float result;
 ADC_CFG_Type config;
@@ -56,9 +56,13 @@ int dataready;
 /* Function to read ADC */
 int getData(void)
 {
+	wmprintf("%s\r\n", __FUNCTION__);
+#if 0
+	if (adc_dev == NULL)
+		return -1;
+
 	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
 	
-	wmprintf("%s\r\n", __FUNCTION__);
 #ifdef ADC_DMA
 	adc_drv_get_samples(adc_dev, buffer, samples);
 		result = ((float)buffer[i] / BIT_RESOLUTION_FACTOR) *
@@ -79,6 +83,7 @@ int getData(void)
 					wm_int_part_of(result),
 					wm_frac_part_of(result, 2));
 */
+#endif
 #endif
 	return result;
 }
@@ -135,7 +140,7 @@ static void temperature_sense_task(os_thread_arg_t data)
 		}
 
 		/* Sensor will be polled after each 10 miliseconds */
-		os_thread_sleep(10);
+		os_thread_sleep(100);
 	}
 }
 
@@ -163,7 +168,7 @@ int temperature_sensor_init(struct sensor_info *curevent)
 		/* stack */
 		&temperature_stack,
 		/* priority */
-		OS_PRIO_3);
+		OS_PRIO_4);
 		
 	if (ret != WM_SUCCESS) {
 		wmprintf("Failed to start cloud_thread: %d\r\n", ret);
