@@ -56,13 +56,14 @@ int dataready;
 /* Function to read ADC */
 int getData(void)
 {
-	wmprintf("%s\r\n", __FUNCTION__);
-#if 0
-	if (adc_dev == NULL)
+//	wmprintf("%s\r\n", __FUNCTION__);
+
+    if (adc_dev == NULL)
 		return -1;
 
+    // corresponds to GPIO 42
 	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
-	
+
 #ifdef ADC_DMA
 	adc_drv_get_samples(adc_dev, buffer, samples);
 		result = ((float)buffer[i] / BIT_RESOLUTION_FACTOR) *
@@ -74,17 +75,29 @@ int getData(void)
 					wm_frac_part_of(result, 2));
 */
 #else
-		buffer[0] = adc_drv_result(adc_dev);
-		result = ((float)buffer[0] / BIT_RESOLUTION_FACTOR) *
-		VMAX_IN_mV * ((float)1/(float)(config.adcGainSel != 0 ?
-		config.adcGainSel : 0.5));
+#define	ITERATIONS	16
+        int avgdata=0;
+        for (i=0;i<ITERATIONS;++i) {
+
+            buffer[0] = adc_drv_result(adc_dev);
+            result = ((float)buffer[0] / BIT_RESOLUTION_FACTOR) *
+            VMAX_IN_mV * ((float)1/(float)(config.adcGainSel != 0 ?
+            config.adcGainSel : 0.5));
+
+            os_thread_sleep(5);
+
+            avgdata+=result;
+        }
+        avgdata/=ITERATIONS;
+        result=avgdata;
 /*		wmprintf("Iteration %d: count %d - %d.%d mV\r\n",
 					i, buffer[0],
 					wm_int_part_of(result),
 					wm_frac_part_of(result, 2));
 */
 #endif
-#endif
+
+    adc_drv_close(adc_dev);
 	return result;
 }
 
@@ -93,22 +106,35 @@ int getData(void)
 
 static void temperature_sense_task(os_thread_arg_t data)
 {
-	#define	ITERATIONS	10
-	int olddata1, olddata2, olddata3, avgdata, reporteddata;
-	int i, tdata[ITERATIONS];
-	int count;
+//    #define	ITERATIONS	16
+//	int olddata1, olddata2, olddata3, avgdata, reporteddata;
+//	int i, tdata[ITERATIONS];
+//	int count;
 
-	wmprintf("%s\r\n", __FUNCTION__);
-	/* clear a buffer */
-	for (i = 0; i < ITERATIONS; i++)
-		tdata[i] = 0;
+    wmprintf("%s\r\n", __FUNCTION__);
+//	/* clear a buffer */
+//	for (i = 0; i < ITERATIONS; i++)
+//		tdata[i] = 0;
 
-	count = 0;
-	olddata1 = 0;
-	olddata2 = 0;
-	olddata3 = 0;
-	reporteddata= 0;
-	while(1) {
+//	count = 0;
+//	olddata1 = 0;
+//	olddata2 = 0;
+//	olddata3 = 0;
+//	reporteddata= 0;
+
+    while (1) {
+        // lock for reading - should be mutex or readlock
+        dataready_flag=0;
+        dataready=getData();
+        // have new data, unlock
+        dataready_flag=1;
+//        wmprintf("%s average value is: %d\r\n", __FUNCTION__,dataready);
+        /* Sensor will be polled after each 10 miliseconds */
+        os_thread_sleep(250);
+    }
+
+#if 0
+    while(1) {
 		/* Read ADC value ITERATIONS times*/ 
 		tdata[count++]= getData();
 
@@ -129,19 +155,20 @@ static void temperature_sense_task(os_thread_arg_t data)
 
 			/* Report data to the cloud, if stable and not the same
 				as reported earlier */
-			if ((olddata1 == olddata2) &&
-				(olddata2 == olddata3) &&
-				(olddata1 != reporteddata)) {
+//			if ((olddata1 == olddata2) &&
+//				(olddata2 == olddata3) &&
+//				(olddata1 != reporteddata)) {
 
-				dataready = olddata1;
-				dataready_flag = 1;
+//                dataready = olddata1;
+                dataready = avgdata;
+                dataready_flag = 1;
 				reporteddata = olddata1;
-			}
+//			}
 		}
 
-		/* Sensor will be polled after each 10 miliseconds */
 		os_thread_sleep(100);
 	}
+#endif
 }
 
 /* Basic Sensor IO initialization to be done here
@@ -221,11 +248,10 @@ int temperature_sensor_init(struct sensor_info *curevent)
 */
 int temperature_sensor_input_scan(struct sensor_info *curevent)
 {
-	if (dataready_flag) {
-		 dataready_flag = 1;
+    if (dataready_flag==1) {
 		/* Report changed temperature value to the AWS cloud */
-		curevent->event_curr_value = dataready;
-		wmprintf("Reporting Temperature value %d\r\n", dataready);
+        curevent->event_curr_value = dataready;
+        wmprintf("Reporting Temperature value %d\r\n", dataready);
 	}
 	return 0;
 }
