@@ -98,7 +98,7 @@ int getTemperatureData(void)
 				config.adcGainSel : 0.5));
 
 	/* Convert Milivolts to the temperature, Ref: Code on Sensor URL */
-	float R = 1023.0/((float)avgdata)-1.0;
+	float R = 1023.0/((float)result)-1.0;
 	R = 100000.0*R;
 	/* convert to temperature via datasheet */
 	float temperature=1.0/(/*log*/(R/100000.0)/B+1/298.15)-273.15;
