@@ -10,6 +10,9 @@
  *
  * This driver offers h/w specific abstraction to register and report
  * specific sensor event to the AWS cloud
+ *
+ * Temperature Sensor Used here is :
+ * http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2
  */
 
 #include <wm_os.h>
@@ -24,9 +27,18 @@
 
 #include "sensor_drv.h"
 #include "sensor_tempr_drv.h"
+#include <math.h>
+
+const int B=4275;	/* B value of the thermistor */
+const int R0 = 100000;	/* R0 = 100k */
+/* Grove - Temperature Sensor connect to GPIO42
+	Please note, GPIO42 to be connected to A1 input of BASE Shild */
+const int pinTempSensor = ADC_CH0;
 
 /*------------------Macro Definitions ------------------*/
-#define SAMPLES	500
+#define ADC_DMA
+#define	ITERATIONS	16
+#define SAMPLES	800
 #define ADC_GAIN	ADC_GAIN_2
 #define BIT_RESOLUTION_FACTOR 32768	/* For 16 bit resolution (2^15-1) */
 #define VMAX_IN_mV	3000	/* Max input voltage in milliVolts */
@@ -39,7 +51,7 @@ static os_thread_t temperature_thread;
 static os_thread_stack_define(temperature_stack, 4 * 1024);
 
 /*-----------------------Global declarations----------------------*/
-uint16_t buffer[SAMPLES];
+uint16_t buffer[SAMPLES+10];
 mdev_t *adc_dev = NULL;
 int i, samples = SAMPLES;
 float result;
@@ -53,52 +65,52 @@ int dataready;
  **********************************************************
  */
 
-/* Function to read ADC */
+/* Function to read Integer portion of temperature value */
 int getData(void)
 {
-//	wmprintf("%s\r\n", __FUNCTION__);
+        int avgdata=0;
 
-    if (adc_dev == NULL)
+	if (adc_dev == NULL)
 		return -1;
 
-    // corresponds to GPIO 42
-	adc_dev = adc_drv_open(ADC0_ID, ADC_CH0);
+	adc_dev = adc_drv_open(ADC0_ID, pinTempSensor);
 
 #ifdef ADC_DMA
 	adc_drv_get_samples(adc_dev, buffer, samples);
-		result = ((float)buffer[i] / BIT_RESOLUTION_FACTOR) *
-		VMAX_IN_mV * ((float)1/(float)(config.adcGainSel != 0 ?
-		config.adcGainSel : 0.5));
-/*		wmprintf("Iteration %d: count %d - %d.%d mV\r\n",
-					i, buffer[i],
-					wm_int_part_of(result),
-					wm_frac_part_of(result, 2));
-*/
+        for (i=0;i<samples;++i) {
+		avgdata+=buffer[i];
+	}
+        avgdata/=samples;
 #else
-#define	ITERATIONS	16
-        int avgdata=0;
         for (i=0;i<ITERATIONS;++i) {
-
-            buffer[0] = adc_drv_result(adc_dev);
-            result = ((float)buffer[0] / BIT_RESOLUTION_FACTOR) *
-            VMAX_IN_mV * ((float)1/(float)(config.adcGainSel != 0 ?
-            config.adcGainSel : 0.5));
-
-            os_thread_sleep(5);
-
-            avgdata+=result;
+		avgdata += adc_drv_result(adc_dev);
+		os_thread_sleep(5);
         }
         avgdata/=ITERATIONS;
-        result=avgdata;
-/*		wmprintf("Iteration %d: count %d - %d.%d mV\r\n",
-					i, buffer[0],
-					wm_int_part_of(result),
-					wm_frac_part_of(result, 2));
-*/
 #endif
 
-    adc_drv_close(adc_dev);
-	return result;
+	adc_drv_close(adc_dev);
+
+	/* Convert ADC Value to the milivolts, Ref: io_demo/adc sample app */
+	result = ((float)avgdata / BIT_RESOLUTION_FACTOR)
+		* VMAX_IN_mV
+		* ((float)1/(float)(config.adcGainSel != 0 ?
+				config.adcGainSel : 0.5));
+
+	/* Convert Milivolts to the temperature, Ref: Code on Sensor URL */
+	float R = 1023.0/((float)avgdata)-1.0;
+	R = 100000.0*R;
+	/* convert to temperature via datasheet */
+	float temperature=1.0/(/*log*/(R/100000.0)/B+1/298.15)-273.15;
+
+	wmprintf("ADC val=%d, milivolts %d.%d, temperature %d.%d\r\n",
+			avgdata,
+			wm_int_part_of(result),
+			wm_frac_part_of(result, 2),
+			wm_int_part_of(temperature),
+			wm_frac_part_of(temperature, 2));
+
+	return wm_int_part_of(temperature);
 }
 
 /* This thread reads sensor data periodically and
@@ -106,69 +118,27 @@ int getData(void)
 
 static void temperature_sense_task(os_thread_arg_t data)
 {
-//    #define	ITERATIONS	16
-//	int olddata1, olddata2, olddata3, avgdata, reporteddata;
-//	int i, tdata[ITERATIONS];
-//	int count;
+	int old_adc_data, new_adc_data;
+	int reporteddata= 0;
 
-    wmprintf("%s\r\n", __FUNCTION__);
-//	/* clear a buffer */
-//	for (i = 0; i < ITERATIONS; i++)
-//		tdata[i] = 0;
-
-//	count = 0;
-//	olddata1 = 0;
-//	olddata2 = 0;
-//	olddata3 = 0;
-//	reporteddata= 0;
-
-    while (1) {
-        // lock for reading - should be mutex or readlock
-        dataready_flag=0;
-        dataready=getData();
-        // have new data, unlock
-        dataready_flag=1;
-//        wmprintf("%s average value is: %d\r\n", __FUNCTION__,dataready);
-        /* Sensor will be polled after each 10 miliseconds */
-        os_thread_sleep(250);
-    }
-
-#if 0
-    while(1) {
+	while(1) {
 		/* Read ADC value ITERATIONS times*/ 
-		tdata[count++]= getData();
+		old_adc_data = new_adc_data;
+		new_adc_data = getData();
 
-		if (count < ITERATIONS) {
-			count = 0;
+		/* Report to the cloud if,
+			two succesive ADC readings are unequal */
+		if (old_adc_data != new_adc_data) {
+			/* Report temperature data to the cloud */
+			dataready = new_adc_data;
+		        dataready_flag = 1;
+			reporteddata = new_adc_data;
 
-			/* calcluate avg value */
-			avgdata = 0;
-			for (i = 0; i < ITERATIONS; i++)
-				avgdata += tdata[i];
-
-			avgdata /= ITERATIONS;
-
-			/* push it in FIFO */
-			olddata3 = olddata2;
-			olddata2 = olddata1;
-			olddata1 = avgdata;
-
-			/* Report data to the cloud, if stable and not the same
-				as reported earlier */
-//			if ((olddata1 == olddata2) &&
-//				(olddata2 == olddata3) &&
-//				(olddata1 != reporteddata)) {
-
-//                dataready = olddata1;
-                dataready = avgdata;
-                dataready_flag = 1;
-				reporteddata = olddata1;
-//			}
+			wmprintf("Reported Tempr Data: %d\r\n",
+						reporteddata);
 		}
-
-		os_thread_sleep(100);
+		os_thread_sleep(250);
 	}
-#endif
 }
 
 /* Basic Sensor IO initialization to be done here
@@ -219,6 +189,8 @@ int temperature_sensor_init(struct sensor_info *curevent)
 		wmprintf("Calibration failed!\r\n");
 
 	adc_drv_close(adc_dev);
+#else
+#error "Unsupported MCU..."
 #endif
 
 	/* get default ADC gain value */
@@ -248,10 +220,11 @@ int temperature_sensor_init(struct sensor_info *curevent)
 */
 int temperature_sensor_input_scan(struct sensor_info *curevent)
 {
-    if (dataready_flag==1) {
+	if (dataready_flag==1) {
+		dataready_flag = 0; /* Clear flag to indicate processed */
 		/* Report changed temperature value to the AWS cloud */
-        curevent->event_curr_value = dataready;
-        wmprintf("Reporting Temperature value %d\r\n", dataready);
+		curevent->event_curr_value = dataready;
+		/*wmprintf("Reporting Temperature value %d\r\n", dataready);*/
 	}
 	return 0;
 }
