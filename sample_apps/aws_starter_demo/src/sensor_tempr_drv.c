@@ -29,11 +29,11 @@
 #include "sensor_tempr_drv.h"
 #include <math.h>
 
-const int B=4275;	/* B value of the thermistor */
-const int R0 = 100000;	/* R0 = 100k */
+static const int B=4275;	/* B value of the thermistor */
+static const int R0 = 100000;	/* R0 = 100k */
 /* Grove - Temperature Sensor connect to GPIO42
 	Please note, GPIO42 to be connected to A1 input of BASE Shild */
-const int pinTempSensor = ADC_CH0;
+static const int pinTempSensor = ADC_CH0;
 
 /*------------------Macro Definitions ------------------*/
 #define ADC_DMA
@@ -51,13 +51,13 @@ static os_thread_t temperature_thread;
 static os_thread_stack_define(temperature_stack, 4 * 1024);
 
 /*-----------------------Global declarations----------------------*/
-uint16_t buffer[SAMPLES+10];
-mdev_t *adc_dev = NULL;
-int i, samples = SAMPLES;
-float result;
-ADC_CFG_Type config;
-int dataready_flag = 0;
-int dataready;
+static uint16_t buffer[SAMPLES+10];
+static mdev_t *adc_dev = NULL;
+static int i, samples = SAMPLES;
+static float result;
+static ADC_CFG_Type config;
+static int dataready_flag = 0;
+static int dataready;
 
 /*
  *********************************************************
@@ -66,7 +66,7 @@ int dataready;
  */
 
 /* Function to read Integer portion of temperature value */
-int getData(void)
+int getTemperatureData(void)
 {
         int avgdata=0;
 
@@ -124,7 +124,7 @@ static void temperature_sense_task(os_thread_arg_t data)
 	while(1) {
 		/* Read ADC value ITERATIONS times*/ 
 		old_adc_data = new_adc_data;
-		new_adc_data = getData();
+		new_adc_data = getTemperatureData();
 
 		/* Report to the cloud if,
 			two succesive ADC readings are unequal */

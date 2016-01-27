@@ -7,11 +7,11 @@
  * Custom Sensor Driver header file
  */
 
-#ifndef __SENSOR_OCC_DRV_H__
-#define __SENSOR_OCC_DRV_H__
+#ifndef __SENSOR_TEMPERATURE_DRV_H__
+#define __SENSOR_TEMPERATURE_DRV_H__
 
 int temperature_sensor_event_register(void);
 
 /* You can declare customer sensor specific declaratio here */
 
-#endif /* __SENSOR_OCC_DRV_H__ */
+#endif /* __SENSOR_TEMPERATURE_DRV_H__ */
