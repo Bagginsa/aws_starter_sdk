@@ -39,6 +39,7 @@
 #include "sensor_drv.h"
 #include "sensor_tempr_drv.h"
 #include "sensor_light_drv.h"
+#include "sensor_presure_drv.h"
 #include "sensor_occ_drv.h"
 
 enum state {
@@ -483,8 +484,9 @@ int main()
 	retval = sensor_drv_init();
 	if (retval == WM_SUCCESS) {
 		/* Register a custom sensor here...*/
-		temperature_sensor_event_register();
-		light_sensor_event_register();
+//		temperature_sensor_event_register();
+//		light_sensor_event_register();
+		presure_sensor_event_register();
 //		occupancy_sensor_event_register();
 	}
 	/* This api adds aws iot configuration support in web application.
