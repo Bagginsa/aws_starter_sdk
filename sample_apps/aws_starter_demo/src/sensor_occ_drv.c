@@ -95,7 +95,7 @@ int occupancy_sensor_input_scan(struct sensor_info *curevent)
 
 	/* for testing purpose only,
 		disable this line getData is functional*/
-	curevent->event_curr_value = val;
+	sprintf(curevent->event_curr_value, "%d", val);
 	gpio_drv_close(gpio_dev);
 	return 0;
 }

@@ -38,7 +38,7 @@ static const int pinLightSensor = ADC_CH1;
 /*------------------Macro Definitions ------------------*/
 #define ADC_DMA
 #define	ITERATIONS	16
-#define SAMPLES	800
+#define SAMPLES	400
 #define ADC_GAIN	ADC_GAIN_2
 #define BIT_RESOLUTION_FACTOR 32768	/* For 16 bit resolution (2^15-1) */
 #define VMAX_IN_mV	3000	/* Max input voltage in milliVolts */
@@ -147,7 +147,7 @@ int light_sensor_init(struct sensor_info *curevent)
 	int ret;
 
 	wmprintf("%s\r\n", __FUNCTION__);
-
+#if 0
 	/* create a light thread in which you can read sensor data
 		out of context of AWS framework */
 	ret = os_thread_create(
@@ -168,7 +168,7 @@ int light_sensor_init(struct sensor_info *curevent)
 		wmprintf("Failed to start cloud_thread: %d\r\n", ret);
 		return ret;
 	}
-
+#endif
 	if (adc_drv_init(ADC0_ID) != WM_SUCCESS) {
 		wmprintf("Error: Cannot init ADC\n\r");
 		return -1;
@@ -217,12 +217,13 @@ int light_sensor_init(struct sensor_info *curevent)
 */
 int light_sensor_input_scan(struct sensor_info *curevent)
 {
-	if (dataready_flag==1) {
-		dataready_flag = 0; /* Clear flag to indicate processed */
+//	if (dataready_flag==1) {
+//		dataready_flag = 0; /* Clear flag to indicate processed */
 		/* Report changed light value to the AWS cloud */
-		curevent->event_curr_value = dataready;
+		sprintf(curevent->event_curr_value, "%d", getLightData());
+		//sprintf(curevent->event_curr_value, "%d", dataready);
 		/*wmprintf("Reporting Light value %d\r\n", dataready);*/
-	}
+//	}
 	return 0;
 }
 

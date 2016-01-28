@@ -103,6 +103,9 @@ int sensor_event_register(struct sensor_info *sevnt)
 				/* Second onward registration */
 				curevent->next = sevnt;
 				break;
+			} else {
+				/* Continue next registration */
+				curevent = curevent->next;
 			}
 		} else {
 			/* Continue next registration */

@@ -10,7 +10,7 @@
 #ifndef __SENSOR_OCC_DRV_H__
 #define __SENSOR_OCC_DRV_H__
 
-int temperature_sensor_event_register(void);
+int occupancy_sensor_event_register(void);
 
 /* You can declare customer sensor specific declaratio here */
 
