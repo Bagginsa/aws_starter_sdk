@@ -148,16 +148,13 @@ int bm180presure_sensor_input_scan(struct sensor_info *curevent)
 
 	long temp = p;
 
-	wmprintf("%s Presure=%d.%d\r\n", __FUNCTION__,
+	/*wmprintf("%s Presure=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
-			wm_frac_part_of(temp, 2));
-//	int val;
+			wm_frac_part_of(temp, 2));*/
 
-	/* wmprintf("%s senval=%d\r\n", __FUNCTION__, val); */
-
-	/* for testing purpose only,
-		disable this line getData is functional*/
-//	curevent->event_curr_value = val;
+	/* Report newly generated value to the Sensor layer */
+	sprintf(curevent->event_curr_value, "%d",
+			wm_int_part_of(temp));
 	return 0;
 }
 
@@ -180,16 +177,14 @@ int bm180temperature_sensor_input_scan(struct sensor_info *curevent)
 	float temp = ((bm180.PressureCompensate + 8)>>4);
 	temp = temp /10;
 
-	wmprintf("%s Temperature=%d.%d\r\n", __FUNCTION__,
+	/*wmprintf("%s Temperature=%d.%d\r\n", __FUNCTION__,
+			wm_int_part_of(temp),
+			wm_frac_part_of(temp, 2));*/
+
+	/* Report newly generated value to the Sensor layer */
+	sprintf(curevent->event_curr_value, "%d.%d",
 			wm_int_part_of(temp),
 			wm_frac_part_of(temp, 2));
-//	int val;
-
-	/* wmprintf("%s senval=%d\r\n", __FUNCTION__, val); */
-
-	/* for testing purpose only,
-		disable this line getData is functional*/
-//	curevent->event_curr_value = val;
 	return 0;
 }
 

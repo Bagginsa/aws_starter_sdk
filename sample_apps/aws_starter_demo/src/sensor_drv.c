@@ -39,14 +39,9 @@ int sensor_msg_construct(char *src, char *dest, int len)
 
 	while(curevent) {
 
-		/*wmprintf("%s preval=%d, newval=%d\r\n",
-			curevent->property,
-			curevent->event_prev_value,
-			curevent->event_curr_value);
-		*/
-		if (curevent->event_prev_value != curevent->event_curr_value) {
-			curevent->event_prev_value = curevent->event_curr_value;	
-			snprintf(dest, len, ",\"%s\":%d",
+		if (strcmp(curevent->event_prev_value, curevent->event_curr_value)) {
+			strcpy(curevent->event_prev_value, curevent->event_curr_value);	
+			snprintf(dest, len, ",\"%s\":%s",
 					curevent->property,
 					curevent->event_curr_value);
 
@@ -116,7 +111,9 @@ int sensor_event_register(struct sensor_info *sevnt)
 		}
 	}
 
-	sevnt->event_prev_value = -1;
+	/* Make both strings same */
+	sprintf(sevnt->event_prev_value, " ");
+	sprintf(sevnt->event_curr_value, " ");
 	/* make sure registered event is last in link list */
 	sevnt->next = NULL;
 	/* Sensor initialization call */ 

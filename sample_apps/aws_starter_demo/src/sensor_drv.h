@@ -19,8 +19,8 @@
 
 /* Struct to hold each sensor event data */
 struct sensor_info {
-	int event_curr_value;
-	int event_prev_value;
+	char event_curr_value[64];
+	char event_prev_value[64];
 	char *property; /*JSON Name of event */
 	int (*init)(struct sensor_info *sevent);
 	int (*write)(struct sensor_info *sevent);
