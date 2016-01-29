@@ -39,4 +39,25 @@ typedef struct {
 	bool type;
 } output_gpio_cfg_t;
 
+/** IO GPIO Configuration.
+ * Can be used to provide complete configuration of GPIO Pin. */
+struct io_gpio_cfg {
+	/** The Pin number associated with GPIO */
+	GPIO_NO_Type pinno;
+	/** The value to be set during configuration */
+	GPIO_IO_Type val;
+	/** Alternate function which is being used by default */
+	GPIO_PinMuxFunc_Type altfun;
+	/** Pull up configuration */
+	GPIO_PINMODE_Type pinmode;
+	/** Direction type, input or output */
+	GPIO_Dir_Type dir;
+	/** GPIO interrut type definition (rising/falling/disabled) */
+	GPIO_Int_Type irqtype;
+	/** Mostly holdd GPT_CH value for PWM/Timer mode */
+	uint8_t id;
+	/** Mostly holdd GPT_CH_NO value for PWM/Timer mode */
+	uint8_t ch;
+};
+
 #endif /* __HAP_IO_H__ */
