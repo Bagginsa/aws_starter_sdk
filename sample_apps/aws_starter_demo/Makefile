@@ -9,6 +9,7 @@ aws_starter_demo-objs-y += src/sensor_tempr_drv.c
 aws_starter_demo-objs-y += src/sensor_light_drv.c
 aws_starter_demo-objs-y += src/sensor_presure_drv.c
 aws_starter_demo-objs-y += src/sensor_occ_drv.c
+aws_starter_demo-objs-y += src/sensor_co2_drv.c
 aws_starter_demo-objs-y += src/sensor_th_drv.c
 aws_starter_demo-objs-y += src/dht_drv.c
 

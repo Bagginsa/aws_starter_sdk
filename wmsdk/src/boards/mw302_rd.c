@@ -66,7 +66,9 @@ void board_uart_pin_config(int id)
 		break;
 	case UART1_ID:
 	case UART2_ID:
-		/* Not implemented yet */
+		/* Needed for CO2 Grove Sensor on GPIO48, GPIO49 */
+		GPIO_PinMuxFun(GPIO_48, GPIO48_UART2_TXD);
+		GPIO_PinMuxFun(GPIO_49, GPIO49_UART2_RXD);
 		break;
 	}
 }

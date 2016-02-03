@@ -41,6 +41,7 @@
 #include "sensor_light_drv.h"
 #include "sensor_presure_drv.h"
 #include "sensor_occ_drv.h"
+#include "sensor_co2_drv.h"
 
 enum state {
 	AWS_CONNECTED = 1,
@@ -489,6 +490,7 @@ int main()
 		light_sensor_event_register();
 		presure_sensor_event_register();
 		th_sensor_event_register();
+		co2_sensor_event_register();
 	}
 	/* This api adds aws iot configuration support in web application.
 	 * Configuration details are then stored in persistent memory.
