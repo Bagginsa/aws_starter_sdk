@@ -487,13 +487,27 @@ int main()
 	retval = sensor_drv_init();
 	if (retval == WM_SUCCESS) {
 		/* Register a custom sensor here...*/
+#ifdef SEN_OCC
 		occupancy_sensor_event_register();
+#endif /* SEN_OCC */
+#ifdef SEN_TEMPR
 		temperature_sensor_event_register();
+#endif /* SEN_TEMPR */
+#ifdef SEN_LIGHT
 		light_sensor_event_register();
+#endif /* SEN_LIGHT */
+#ifdef SEN_PRESSURE
 		presure_sensor_event_register();
+#endif /* SEN_PRESSURE */
+#ifdef SEN_TH
 		th_sensor_event_register();
+#endif /* SEN_TH */
+#ifdef SEN_CO2
 		co2_sensor_event_register();
+#endif /* SEN_CO2 */
+#ifdef SEN_GAS
 		gas_sensor_event_register();
+#endif /* SEN_GAS */
 	}
 	/* This api adds aws iot configuration support in web application.
 	 * Configuration details are then stored in persistent memory.
