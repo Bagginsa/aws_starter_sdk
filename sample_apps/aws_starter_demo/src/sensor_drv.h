@@ -32,6 +32,6 @@ struct sensor_info {
 int sensor_event_register(struct sensor_info *sevnt);
 int sensor_drv_init(void);
 int sensor_msg_construct(char *src, char*dest, int len);
-void sensor_intputs_scan(void);
+void sensor_inputs_scan(void);
 
 #endif /* __SENSOR_DRV_H__ */
