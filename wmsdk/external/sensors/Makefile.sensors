@@ -1,0 +1,23 @@
+# Copyright (C) 2008-2015, Marvell International Ltd.
+# All Rights Reserved.
+
+libs-y += libsensors
+
+# Sensor interface and abstraction layer
+libsensors-objs-y := src/sensor_drv.c
+
+# Generic Sensors
+libsensors-objs-y += \
+	src/generic/sensor_occ_drv.c \
+	src/generic/dht_drv.c \
+
+# Grove Sensors
+libsensors-objs-y += \
+	src/grove/sensor_light_drv.c \
+	src/grove/sensor_gas_drv.c \
+	src/grove/sensor_co2_drv.c \
+	src/grove/sensor_pressure_drv.c \
+	src/grove/sensor_th_drv.c \
+	src/grove/sensor_tempr_drv.c \
+
+libsensors-cflags-y := -I $(d)/src -I $(d)/incl/grove -I $(d)/incl/generic

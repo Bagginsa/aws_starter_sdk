@@ -22,7 +22,7 @@
 #include <lowlevel_drivers.h>
 
 #include "sensor_drv.h"
-#include "sensor_presure_drv.h"
+#include "sensor_pressure_drv.h"
 
 #include <wm_os.h>
 #include <mdev_i2c.h>
@@ -37,7 +37,7 @@ static uint8_t write_data[BUF_LEN];
 static struct Barometer bm180;
 /*
  *********************************************************
- **** Presure Sensor H/W Specific code
+ **** Pressure Sensor H/W Specific code
  **********************************************************
  */
 
@@ -65,7 +65,7 @@ short i2c_bmp180ReadInt(uint8_t address)
 
 	This function will be called only once during sensor registration
  */
-int presure_sensor_init(struct sensor_info *curevent)
+int pressure_sensor_init(struct sensor_info *curevent)
 {
 	int len;
 
@@ -110,17 +110,17 @@ int presure_sensor_init(struct sensor_info *curevent)
 	data from analog sensors connected to ADC lines. Event this can
 	be used to digital IO scanning and polling
 */
-int bm180presure_sensor_input_scan(struct sensor_info *curevent)
+int bm180pressure_sensor_input_scan(struct sensor_info *curevent)
 {
 	/* Write I2C Command to Measure a Temperature */
 	write_data[0] = 0xF4; /* Ctrl register address */
-	write_data[1] = 0x34 + (OSS<<6); /* Measure Presure */
+	write_data[1] = 0x34 + (OSS<<6); /* Measure Pressure */
 	i2c_drv_write(i2c0, write_data, 2);
 	os_thread_sleep(10);
 	/* Write I2C Command to read UT Temperature Value */
 	bm180.up = i2c_bmp180ReadLong();
 
-	/* Calculate Presure Value */
+	/* Calculate Pressure Value */
 	long x1, x2, x3, b3, b6, p;
 	unsigned long b4, b7;
 	b6 = bm180.PressureCompensate - 4000;
@@ -148,7 +148,7 @@ int bm180presure_sensor_input_scan(struct sensor_info *curevent)
 
 	long temp = p;
 
-	/*wmprintf("%s Presure=%d.%d\r\n", __FUNCTION__,
+	/*wmprintf("%s Pressure=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
 			wm_frac_part_of(temp, 2));*/
 
@@ -188,21 +188,21 @@ int bm180temperature_sensor_input_scan(struct sensor_info *curevent)
 	return 0;
 }
 
-struct sensor_info event_bm180presure_sensor = {
-	.property = "BM180-Presure",
-	.init = presure_sensor_init,
-	.read = bm180presure_sensor_input_scan,
+struct sensor_info event_bm180pressure_sensor = {
+	.property = "BM180-Pressure",
+	.init = pressure_sensor_init,
+	.read = bm180pressure_sensor_input_scan,
 };
 
 struct sensor_info event_bm180temperature_sensor = {
 	.property = "BM180-Tempereature",
-	.init = presure_sensor_init,
+	.init = pressure_sensor_init,
 	.read = bm180temperature_sensor_input_scan,
 };
 
-int presure_sensor_event_register(void)
+int pressure_sensor_event_register(void)
 {
-	sensor_event_register(&event_bm180presure_sensor);
+	sensor_event_register(&event_bm180pressure_sensor);
 	return sensor_event_register(&event_bm180temperature_sensor);
 }
 

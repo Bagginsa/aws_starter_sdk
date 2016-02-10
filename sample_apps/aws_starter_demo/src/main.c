@@ -39,7 +39,7 @@
 #include "sensor_drv.h"
 #include "sensor_tempr_drv.h"
 #include "sensor_light_drv.h"
-#include "sensor_presure_drv.h"
+#include "sensor_pressure_drv.h"
 #include "sensor_th_drv.h"
 #include "sensor_occ_drv.h"
 #include "sensor_co2_drv.h"
@@ -497,7 +497,7 @@ int main()
 		light_sensor_event_register();
 #endif /* SEN_LIGHT */
 #ifdef SEN_PRESSURE
-		presure_sensor_event_register();
+		pressure_sensor_event_register();
 #endif /* SEN_PRESSURE */
 #ifdef SEN_TH
 		th_sensor_event_register();

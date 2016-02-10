@@ -7,8 +7,8 @@
  * Custom Sensor Driver header file
  */
 
-#ifndef __SENSOR_PRESURE_DRV_H__
-#define __SENSOR_PRESURE_DRV_H__
+#ifndef __SENSOR_PRESSURE_DRV_H__
+#define __SENSOR_PRESSURE_DRV_H__
 
 #define BMP085_ADDRESS 0x77
 
@@ -43,8 +43,8 @@ struct Barometer {
     short up;
 };
 
-int presure_sensor_event_register(void);
+int pressure_sensor_event_register(void);
 
 /* You can declare customer sensor specific declaratio here */
 
-#endif /* __SENSOR_PRESURE_DRV_H__ */
+#endif /* __SENSOR_PRESSURE_DRV_H__ */

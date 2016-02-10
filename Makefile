@@ -10,6 +10,7 @@ include build/aws_starter_sdk.mk
 subdir-y += wmsdk/external/aws_iot
 subdir-y += wmsdk/external/freertos
 subdir-y += wmsdk/external/lwip
+subdir-y += wmsdk/external/sensors
 
 # pre-built libraries
 subdir-y += wmsdk/libs

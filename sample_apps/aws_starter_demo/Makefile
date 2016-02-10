@@ -4,43 +4,34 @@
 
 exec-y += aws_starter_demo
 aws_starter_demo-objs-y := src/main.c
-aws_starter_demo-objs-y += src/sensor_drv.c
 
 aws_starter_demo-cflags-y := -I$(d)/src -DAPPCONFIG_DEBUG_ENABLE=1
 
 ifeq ($(SEN_OCC),y)
-aws_starter_demo-objs-y += src/sensor_occ_drv.c
 aws_starter_demo-cflags-y += -DSEN_OCC=1
 endif
 
 ifeq ($(SEN_LIGHT),y)
-aws_starter_demo-objs-y += src/sensor_light_drv.c
 aws_starter_demo-cflags-y += -DSEN_LIGHT=1
 endif
 
 ifeq ($(SEN_PRESSURE),y)
-aws_starter_demo-objs-y += src/sensor_presure_drv.c
 aws_starter_demo-cflags-y += -DSEN_PRESSURE=1
 endif
 
 ifeq ($(SEN_TH),y)
-aws_starter_demo-objs-y += src/sensor_th_drv.c
-aws_starter_demo-objs-y += src/dht_drv.c
 aws_starter_demo-cflags-y += -DSEN_TH=1
 endif
 
 ifeq ($(SEN_GAS),y)
-aws_starter_demo-objs-y += src/sensor_gas_drv.c
 aws_starter_demo-cflags-y += -DSEN_GAS=1
 endif
 
 ifeq ($(SEN_CO2),y)
-aws_starter_demo-objs-y += src/sensor_co2_drv.c
 aws_starter_demo-cflags-y += -DSEN_CO2=1
 endif
 
 ifeq ($(SEN_TEMPR),y)
-aws_starter_demo-objs-y += src/sensor_tempr_drv.c
 aws_starter_demo-cflags-y += -DSEN_TEMPR=1
 endif
 
