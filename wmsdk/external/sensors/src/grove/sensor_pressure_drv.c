@@ -147,6 +147,7 @@ int bm180pressure_sensor_input_scan(struct sensor_info *curevent)
 	p += (x1 + x2 + 3791)>>4;
 
 	long temp = p;
+	temp /= 2;
 
 	/*wmprintf("%s Pressure=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
@@ -176,7 +177,6 @@ int bm180temperature_sensor_input_scan(struct sensor_info *curevent)
 
 	float temp = ((bm180.PressureCompensate + 8)>>4);
 	temp = temp /10;
-	temp /= 2;
 
 	/*wmprintf("%s Temperature=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
