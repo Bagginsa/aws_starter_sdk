@@ -4,12 +4,12 @@
  */
 
 /*
- * Custom Sensor Driver for AWS Application
+ * ADC based Temperature Sensor Low Level Driver
  *
  * Summary:
  *
- * This driver offers h/w specific abstraction to register and report
- * specific sensor event to the AWS cloud
+ * This driver offers h/w specific abstraction to register, initialize and
+ * scan and report specific sensor event to the Sensor Interface Layer
  *
  * Temperature Sensor Used here is :
  * http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor_V1.2
@@ -136,22 +136,19 @@ int temperature_sensor_init(struct sensor_info *curevent)
 #endif
 	/* get default ADC gain value */
 	adc_get_config(&config);
-	wmprintf("Default ADC gain value = %d\r\n", config.adcGainSel);
+	dbg("Default ADC gain value = %d\r\n", config.adcGainSel);
 
 	/* Modify ADC gain to 2 */
 	adc_modify_default_config(adcGainSel, ADC_GAIN);
 
 	adc_get_config(&config);
-	wmprintf("Modified ADC gain value to %d\r\n", config.adcGainSel);
+	dbg("Modified ADC gain value to %d\r\n", config.adcGainSel);
 
 	return 0;
 }
 
 /* Sensor input from IO should be read here and to be passed
 	in curevent->event_curr_value variable to the upper layer
-
-	Respective AWS event will be reported to the cloud by
-	uper sensor_driver layer
 
 	This function will be called periodically by the upper layer
 	hence you can poll your input here, and there is no need of
@@ -161,9 +158,9 @@ int temperature_sensor_init(struct sensor_info *curevent)
 */
 int temperature_sensor_input_scan(struct sensor_info *curevent)
 {
-	/* Report changed temperature value to the AWS cloud */
+	/* Report changed temperature value to the Sensor Interface Layer */
 	sprintf(curevent->event_curr_value, "%d", getTemperatureData());
-	/*wmprintf("Reporting Temperature value %d\r\n", getTemperatureData());*/
+	dbg("Reporting Temperature value %d\r\n", getTemperatureData());
 	return 0;
 }
 

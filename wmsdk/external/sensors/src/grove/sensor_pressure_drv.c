@@ -4,12 +4,16 @@
  */
 
 /*
- * Custom Sensor Driver for AWS Application
+ * I2C based Grove - Barometer Sensor (BMP180) Low Level Driver
  *
  * Summary:
  *
- * This driver offers h/w specific abstraction to register and report
- * specific sensor event to the AWS cloud
+ * This driver offers h/w specific abstraction to register, initialize,
+ * scan and report specific sensor event to the Sensor Interface Layer
+ *
+ * Sensor used for this driver is
+ * http://www.seeedstudio.com/wiki/Grove_-_Barometer_Sensor_(BMP180)
+ *
  */
 
 #include <wm_os.h>
@@ -35,6 +39,7 @@ static mdev_t *i2c0;
 static uint8_t read_data[BUF_LEN];
 static uint8_t write_data[BUF_LEN];
 static struct Barometer bm180;
+
 /*
  *********************************************************
  **** Pressure Sensor H/W Specific code
@@ -101,9 +106,6 @@ int pressure_sensor_init(struct sensor_info *curevent)
 /* Sensor input from IO should be read here and to be passed
 	in curevent->event_curr_value variable to the upper layer
 
-	Respective AWS event will be reported to the cloud by
-	uper sensor_driver layer
-
 	This function will be called periodically by the upper layer
 	hence you can poll your input here, and there is no need of
 	callback IO interrupt, this is very usefull to sense variable
@@ -149,9 +151,9 @@ int bm180pressure_sensor_input_scan(struct sensor_info *curevent)
 	long temp = p;
 	temp /= 2;
 
-	/*wmprintf("%s Pressure=%d.%d\r\n", __FUNCTION__,
+	dbg("%s Pressure=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
-			wm_frac_part_of(temp, 2));*/
+			wm_frac_part_of(temp, 2));
 
 	/* Report newly generated value to the Sensor layer */
 	sprintf(curevent->event_curr_value, "%d",
@@ -178,9 +180,9 @@ int bm180temperature_sensor_input_scan(struct sensor_info *curevent)
 	float temp = ((bm180.PressureCompensate + 8)>>4);
 	temp = temp /10;
 
-	/*wmprintf("%s Temperature=%d.%d\r\n", __FUNCTION__,
+	dbg("%s Temperature=%d.%d\r\n", __FUNCTION__,
 			wm_int_part_of(temp),
-			wm_frac_part_of(temp, 2));*/
+			wm_frac_part_of(temp, 2));
 
 	/* Report newly generated value to the Sensor layer */
 	sprintf(curevent->event_curr_value, "%d.%d",

@@ -87,7 +87,7 @@ float getGasSensorData(void)
 		* ((float)1/(float)(config.adcGainSel != 0 ?
 				config.adcGainSel : 0.5));
 
-	wmprintf("ADC val=%d, milivolts %d.%d\r\n",
+	dbg("ADC val=%d, milivolts %d.%d\r\n",
 			avgdata,
 			wm_int_part_of(result),
 			wm_frac_part_of(result, 2));
@@ -125,13 +125,13 @@ int gas_sensor_init(struct sensor_info *curevent)
 
 	/* get default ADC gain value */
 	adc_get_config(&config);
-	wmprintf("Default ADC gain value = %d\r\n", config.adcGainSel);
+	dbg("Default ADC gain value = %d\r\n", config.adcGainSel);
 
 	/* Modify ADC gain to 2 */
 	adc_modify_default_config(adcGainSel, ADC_GAIN);
 
 	adc_get_config(&config);
-	wmprintf("Modified ADC gain value to %d\r\n", config.adcGainSel);
+	dbg("Modified ADC gain value to %d\r\n", config.adcGainSel);
 
 	return 0;
 }
@@ -156,10 +156,9 @@ int gas_sensor_input_scan(struct sensor_info *curevent)
 	sprintf(curevent->event_curr_value, "%d.%d", 
 			wm_int_part_of(sdata),
 			wm_frac_part_of(sdata, 2));
-	/*wmprintf("Reporting Temperature value %d\r\n",
+	dbg("Reporting Temperature value %d\r\n",
 			wm_int_part_of(sdata),
 			wm_frac_part_of(sdata, 2));
-			);*/
 	return 0;
 }
 

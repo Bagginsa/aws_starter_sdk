@@ -38,7 +38,8 @@
 #include "aws_starter_root_ca_cert.h"
 
 #if defined(SEN_OCC) || defined(SEN_TEMPR) || defined(SEN_LIGHT) || \
-	defined(SEN_TH) || defined(SEN_CO2) || defined(SEN_GAS)
+	defined(SEN_TH) || defined(SEN_CO2) || defined(SEN_GAS) || \
+	defined(SEN_PRESSURE)
 
 #define SENSORS_SUPPORTED
 #include "sensor_drv.h"
@@ -400,7 +401,7 @@ static void aws_starter_demo(os_thread_arg_t data)
 		os_thread_sleep(1000);
 
 #ifdef SENSORS_SUPPORTED
-		/* periodically scan the sensor intpus */
+		/* Periodically scan the sensor inputs */
 		sensor_inputs_scan();
 #endif /* SENSORS_SUPPORTED */
 	}
@@ -492,10 +493,10 @@ int main()
 	configure_led_and_button();
 
 #ifdef SENSORS_SUPPORTED
-	/* Initialize a sensor driver */
+	/* Initialize Sensor Interface Layer */
 	int retval = sensor_drv_init();
 	if (retval == WM_SUCCESS) {
-		/* Register a custom sensor here...*/
+		/* Register all Sensor Low Level drivers here... */
 #ifdef SEN_OCC
 		occupancy_sensor_event_register();
 #endif /* SEN_OCC */

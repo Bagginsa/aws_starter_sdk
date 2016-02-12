@@ -15,6 +15,14 @@
 */
 #define SENSOR_POLL_TIME	20 /* (in Miliseconds) */
 
+#if SENSOR_DEBUG_ENABLE
+#define dbg(_fmt_, ...)				\
+	wmprintf("[appln] "_fmt_"\n\r", ##__VA_ARGS__)
+#else
+#define dbg(...)
+#endif /* SENSOR_DEBUG_ENABLE */
+
+
 /*-----------------------Global declarations----------------------*/
 
 /* Struct to hold each sensor event data */

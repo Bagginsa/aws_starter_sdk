@@ -135,7 +135,7 @@ int mhz16co2_sensor_input_scan(struct sensor_info *curevent)
 	/* Report newly generated value to the Sensor layer */
 	sprintf(curevent->event_curr_value, "%d", CO2PPM);
 
-	/*wmprintf("%s = %d\r\n", curevent->property, CO2PPM);*/
+	dbg("%s = %d\r\n", curevent->property, CO2PPM);
 	return 0;
 }
 
@@ -143,7 +143,7 @@ int mhz16temperature_sensor_input_scan(struct sensor_info *curevent)
 {
 	/* Report newly generated value to the Sensor layer */
 	sprintf(curevent->event_curr_value, "%d", temperature);
-	/*wmprintf("%s = %d\r\n", curevent->property, temperature);*/
+	dbg("%s = %d\r\n", curevent->property, temperature);
 	return 0;
 }
 

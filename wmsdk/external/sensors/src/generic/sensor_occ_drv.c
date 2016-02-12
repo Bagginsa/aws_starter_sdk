@@ -4,12 +4,12 @@
  */
 
 /*
- * Custom Sensor Driver for AWS Application
+ * GPIO based Occupancy Sensor Low Level Driver
  *
  * Summary:
  *
- * This driver offers h/w specific abstraction to register and report
- * specific sensor event to the AWS cloud
+ * This driver offers h/w specific abstraction to register, initialize and
+ * scan and report specific sensor event to the Sensor Interface Layer
  */
 
 #include <wm_os.h>
@@ -71,9 +71,6 @@ int occupancy_sensor_init(struct sensor_info *curevent)
 /* Sensor input from IO should be read here and to be passed
 	in curevent->event_curr_value variable to the upper layer
 
-	Respective AWS event will be reported to the cloud by
-	uper sensor_driver layer
-
 	This function will be called periodically by the upper layer
 	hence you can poll your input here, and there is no need of
 	callback IO interrupt, this is very usefull to sense variable
@@ -91,7 +88,7 @@ int occupancy_sensor_input_scan(struct sensor_info *curevent)
 	/* Read sensor GPIO level */
 	gpio_drv_read(gpio_dev, OCC_SEN_IO, &val);
 
-	/* wmprintf("%s senval=%d\r\n", __FUNCTION__, val); */
+	dbg("%s senval=%d\r\n", __FUNCTION__, val);
 
 	/* for testing purpose only,
 		disable this line getData is functional*/
