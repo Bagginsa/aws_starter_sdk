@@ -36,6 +36,11 @@
 #include <aws_iot_config.h>
 
 #include "aws_starter_root_ca_cert.h"
+
+#if defined(SEN_OCC) || defined(SEN_TEMPR) || defined(SEN_LIGHT) || \
+	defined(SEN_TH) || defined(SEN_CO2) || defined(SEN_GAS)
+
+#define SENSORS_SUPPORTED
 #include "sensor_drv.h"
 #include "sensor_tempr_drv.h"
 #include "sensor_light_drv.h"
@@ -44,6 +49,8 @@
 #include "sensor_occ_drv.h"
 #include "sensor_co2_drv.h"
 #include "sensor_gas_drv.h"
+
+#endif
 
 enum state {
 	AWS_CONNECTED = 1,
@@ -276,9 +283,10 @@ int aws_publish_property_state(ShadowParameters_t *sp)
 
 	memset(state, 0, BUFSIZE);
 
+#ifdef SENSORS_SUPPORTED
 	/* Construct JSON object for sensor events */
 	sensor_msg_construct(state, buf_out, BUFSIZE);
-
+#endif /* SENSORS_SUPPORTED */
 	if (pushbutton_a_count_prev != pushbutton_a_count) {
 		snprintf(buf_out, BUFSIZE, ",\"%s\":%d", VAR_BUTTON_A_PROPERTY,
 			 pushbutton_a_count);
@@ -391,8 +399,10 @@ static void aws_starter_demo(os_thread_arg_t data)
 
 		os_thread_sleep(1000);
 
+#ifdef SENSORS_SUPPORTED
 		/* periodically scan the sensor intpus */
 		sensor_inputs_scan();
+#endif /* SENSORS_SUPPORTED */
 	}
 
 	ret = aws_iot_shadow_disconnect(&mqtt_client);
@@ -462,8 +472,6 @@ void wlan_event_normal_connected(void *data)
 
 int main()
 {
-	int retval;
-
 	/* initialize the standard input output facility over uart */
 	if (wmstdio_init(UART0_ID, 0) != WM_SUCCESS) {
 		return -WM_FAIL;
@@ -483,8 +491,9 @@ int main()
 	/* configure led and pushbutton to communicate with cloud */
 	configure_led_and_button();
 
+#ifdef SENSORS_SUPPORTED
 	/* Initialize a sensor driver */
-	retval = sensor_drv_init();
+	int retval = sensor_drv_init();
 	if (retval == WM_SUCCESS) {
 		/* Register a custom sensor here...*/
 #ifdef SEN_OCC
@@ -509,6 +518,8 @@ int main()
 		gas_sensor_event_register();
 #endif /* SEN_GAS */
 	}
+#endif /* SENSORS_SUPPORTED */
+
 	/* This api adds aws iot configuration support in web application.
 	 * Configuration details are then stored in persistent memory.
 	 */

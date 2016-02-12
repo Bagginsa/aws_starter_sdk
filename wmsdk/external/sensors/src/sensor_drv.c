@@ -24,18 +24,12 @@
 struct sensor_info *sensor_ll = NULL;
 /* Flag to track driver initialization */
 int sensor_drvinit_flag = 0;
-/* Thread handle */
-static os_thread_t sensor_th;
-/* Buffer to be used as stack */
-static os_thread_stack_define(sensor_thread_stack, 2 * 1024);
-
 
 /* Construct JSON keyvalue pair as per status of sensors */
 int sensor_msg_construct(char *src, char *dest, int len)
 {
 	struct sensor_info *curevent = sensor_ll;
 	int ret = WM_SUCCESS;
-	char buf[500];
 
 	while(curevent) {
 
@@ -129,8 +123,6 @@ int sensor_event_register(struct sensor_info *sevnt)
 
 int sensor_drv_init(void)
 {
-	int ret;
-
 	if (!sensor_drvinit_flag) {
 		sensor_drvinit_flag = 1; /* flag to indiate init done */
 		sensor_ll = NULL; /* flush registered actions */

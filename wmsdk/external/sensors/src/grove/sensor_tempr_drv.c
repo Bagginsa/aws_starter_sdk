@@ -45,19 +45,12 @@ static const int pinTempSensor = ADC_CH0;
 /* Default is IO mode, DMA mode can be enabled as per the requirement */
 /*#define ADC_DMA*/
 
-/* Thread handle */
-static os_thread_t temperature_thread;
-/* Buffer to be used as stack */
-static os_thread_stack_define(temperature_stack, 4 * 1024);
-
 /*-----------------------Global declarations----------------------*/
 static uint16_t buffer[SAMPLES+10];
 static mdev_t *adc_dev = NULL;
 static int i, samples = SAMPLES;
 static float result;
 static ADC_CFG_Type config;
-static int dataready_flag = 0;
-static int dataready;
 
 /*
  *********************************************************
@@ -113,65 +106,14 @@ int getTemperatureData(void)
 	return wm_int_part_of(temperature);
 }
 
-/* This thread reads sensor data periodically and
-	reports the change to the AWS cloud */
-
-static void temperature_sense_task(os_thread_arg_t data)
-{
-	int old_adc_data, new_adc_data;
-	int reporteddata= 0;
-
-	while(1) {
-		/* Read ADC value ITERATIONS times*/ 
-		old_adc_data = new_adc_data;
-		new_adc_data = getTemperatureData();
-
-		/* Report to the cloud if,
-			two succesive ADC readings are unequal */
-		if (old_adc_data != new_adc_data) {
-			/* Report temperature data to the cloud */
-			dataready = new_adc_data;
-		        dataready_flag = 1;
-			reporteddata = new_adc_data;
-
-			wmprintf("Reported Tempr Data: %d\r\n",
-						reporteddata);
-		}
-		os_thread_sleep(250);
-	}
-}
-
 /* Basic Sensor IO initialization to be done here
 
 	This function will be called only once during sensor registration
  */
 int temperature_sensor_init(struct sensor_info *curevent)
 {
-	int ret;
-
 	wmprintf("%s\r\n", __FUNCTION__);
-#if 0
-	/* create a temperature thread in which you can read sensor data
-		out of context of AWS framework */
-	ret = os_thread_create(
-		/* thread handle */
-		&temperature_thread,
-		/* thread name */
-		"Temperature_Tr",
-		/* entry function */
-		temperature_sense_task,
-		/* argument */
-		0,
-		/* stack */
-		&temperature_stack,
-		/* priority */
-		OS_PRIO_4);
-		
-	if (ret != WM_SUCCESS) {
-		wmprintf("Failed to start cloud_thread: %d\r\n", ret);
-		return ret;
-	}
-#endif
+
 	if (adc_drv_init(ADC0_ID) != WM_SUCCESS) {
 		wmprintf("Error: Cannot init ADC\n\r");
 		return -1;
@@ -192,7 +134,6 @@ int temperature_sensor_init(struct sensor_info *curevent)
 #else
 #error "Unsupported MCU..."
 #endif
-
 	/* get default ADC gain value */
 	adc_get_config(&config);
 	wmprintf("Default ADC gain value = %d\r\n", config.adcGainSel);
@@ -220,13 +161,9 @@ int temperature_sensor_init(struct sensor_info *curevent)
 */
 int temperature_sensor_input_scan(struct sensor_info *curevent)
 {
-//	if (dataready_flag==1) {
-//		dataready_flag = 0; /* Clear flag to indicate processed */
-		/* Report changed temperature value to the AWS cloud */
-//		sprintf(curevent->event_curr_value, "%d", dataready);
-		sprintf(curevent->event_curr_value, "%d", getTemperatureData());
-		/*wmprintf("Reporting Temperature value %d\r\n", dataready);*/
-//	}
+	/* Report changed temperature value to the AWS cloud */
+	sprintf(curevent->event_curr_value, "%d", getTemperatureData());
+	/*wmprintf("Reporting Temperature value %d\r\n", getTemperatureData());*/
 	return 0;
 }
 

@@ -101,7 +101,7 @@ static void  dht_read_BitRou(uint32_t tmcnt)
  * io->pinno line is used
  * If HIGH  on DHT Line  then return.
  */
-static void  dht_learn_cb(void)
+static void  dht_learn_cb(int pin, void *data)
 {
         uint32_t timer_val;
         timer_val=GPT_GetCounterVal(dhtio->id);
@@ -197,7 +197,7 @@ void dht_timer(void)
 	}
 }
 
-void dht_os_timer_cb (void)
+void dht_os_timer_cb (os_timer_arg_t targ)
 {
 	dht_timer();
 }
