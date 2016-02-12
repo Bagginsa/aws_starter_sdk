@@ -53,7 +53,7 @@ static char H_ready[16];
 int dht_readings(struct dht_psmvar *dht_vars)
 {
 	wmprintf("Temperature =%d Humidity = %d\r\n",
-			dht_vars->temperature, dht_vars->humidity);
+			dht_vars->temperature, dht_vars->humidity * 2);
 	tempr[3] = tempr[2];
 	tempr[2] = tempr[1];
 	tempr[1] = tempr[0];
@@ -68,13 +68,13 @@ int dht_readings(struct dht_psmvar *dht_vars)
 	humidity[3] = humidity[2];
 	humidity[2] = humidity[1];
 	humidity[1] = humidity[0];
-	humidity[0] = dht_vars->humidity;
+	humidity[0] = dht_vars->humidity * 2;
 	if ((humidity[0] == humidity[1])
 		&& (humidity[1] == humidity[2])
 		&& (humidity[2] != humidity[3])) {
 			/* Temperature reading is ready to post */
-			sprintf(H_ready, "%d", humidity[3] * 2);
-			/*wmprintf("Reporting Humidity = %s\r\n", H_ready);*/
+			sprintf(H_ready, "%d", humidity[3]);
+			wmprintf("Reporting Humidity = %s\r\n", H_ready);
 	}
 	return 0;
 }
