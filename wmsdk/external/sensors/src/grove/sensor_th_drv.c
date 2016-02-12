@@ -138,7 +138,7 @@ int tht_sensor_input_scan(struct sensor_info *curevent)
 int thh_sensor_input_scan(struct sensor_info *curevent)
 {
 	if (strlen(H_ready)) {
-		sprintf(curevent->event_curr_value, "%s", H_ready);
+		sprintf(curevent->event_curr_value, "%s", H_ready *2);
 		H_ready[0] = 0;
 		/*wmprintf("Reported Humidity = %s\r\n",
 				curevent->event_curr_value);*/
