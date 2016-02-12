@@ -73,7 +73,7 @@ int dht_readings(struct dht_psmvar *dht_vars)
 		&& (humidity[1] == humidity[2])
 		&& (humidity[2] != humidity[3])) {
 			/* Temperature reading is ready to post */
-			sprintf(H_ready, "%d", humidity[3]);
+			sprintf(H_ready, "%d", humidity[3] * 2);
 			/*wmprintf("Reporting Humidity = %s\r\n", H_ready);*/
 	}
 	return 0;
@@ -138,7 +138,7 @@ int tht_sensor_input_scan(struct sensor_info *curevent)
 int thh_sensor_input_scan(struct sensor_info *curevent)
 {
 	if (strlen(H_ready)) {
-		sprintf(curevent->event_curr_value, "%s", H_ready *2);
+		sprintf(curevent->event_curr_value, "%s", H_ready);
 		H_ready[0] = 0;
 		/*wmprintf("Reported Humidity = %s\r\n",
 				curevent->event_curr_value);*/
