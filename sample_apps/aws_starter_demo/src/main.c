@@ -50,6 +50,7 @@
 #include "sensor_occ_drv.h"
 #include "sensor_co2_drv.h"
 #include "sensor_gas_drv.h"
+#include "sensor_acc_drv.h"
 
 #endif
 
@@ -518,6 +519,9 @@ int main()
 #ifdef SEN_GAS
 		gas_sensor_event_register();
 #endif /* SEN_GAS */
+#ifdef SEN_ACC
+		acc_sensor_event_register();
+#endif /* SEN_ACC */
 	}
 #endif /* SENSORS_SUPPORTED */
 
