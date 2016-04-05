@@ -47,7 +47,8 @@
 
 /*------------------Macro Definitions ------------------*/
 #define BUF_LEN		16
-#define I2C_SLV_ADDR	MMA7660_ADDR 
+#define I2C_SLV_ADDR	MMA7660_ADDR
+#define I2X_WR_DLY	50
 #define MMA7660TIMEOUT	500	/* us */
 
 /*------------------Global Variables -------------------*/
@@ -71,6 +72,7 @@ void MMA7660_write(uint8_t _register, uint8_t _data)
 	write_data[0] = _register;
 	write_data[1] = _data;
 	i2c_drv_write(i2c0, write_data, 2);
+	os_thread_sleep(I2X_WR_DLY);
 }
 
 /*Function: Writes only register byte of the MMA7660 */
@@ -146,7 +148,7 @@ void MMA7660_init()
 {
 	MMA7660_initAccelTable();
 	MMA7660_setMode(MMA7660_STAND_BY);
-	MMA7660_setSampleRate(AUTO_SLEEP_32);
+	MMA7660_setSampleRate(AUTO_SLEEP_64);
 	/* MMA7660_write(MMA7660_INTSU, interrupts); */
 	MMA7660_setMode(MMA7660_ACTIVE);
 }
@@ -162,13 +164,23 @@ bool MMA7660_getXYZ(int8_t *x,int8_t *y,int8_t *z)
 	if (!i2c0)
 		return 0;
 
-	MMA7660_From(3);
+	MMA7660_From(0);
 	i2c_drv_read(i2c0, (uint8_t *)val, 3);
 
-	*x = (val[0]<<2)/4;
-	*y = (val[1]<<2)/4;
-	*z = (val[2]<<2)/4;
+	/* Abstracting signed int8_t value from 6bit signed read
+		value from device, range of input value is -31 to +31 */
+	*x = val[0] & 0x1f;
+	*y = val[1] & 0x1f;
+	*z = val[2] & 0x1f;
+	if (val[0] & (1 << 5))
+		*x -= 32;
+	if (val[1] & (1 << 5))
+		*y -= 32;
+	if (val[2] & (1 << 5))
+		*z -= 32;
 
+	/*wmprintf("%s POS, %2d(%02x), %2d(%02x), %2d(%02x)\r\n",
+		__FUNCTION__, *x, val[0], *y, val[1], *z, val[2]);*/
 	return 1;
 }
 
@@ -187,7 +199,6 @@ int acc_sensor_init(struct sensor_info *curevent)
 
 	/* Initialize Acc Sensor H/W */
 	MMA7660_init();
-
 	return 0;
 }
 
