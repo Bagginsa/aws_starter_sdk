@@ -39,7 +39,7 @@
 
 #if defined(SEN_OCC) || defined(SEN_TEMPR) || defined(SEN_LIGHT) || \
 	defined(SEN_TH) || defined(SEN_CO2) || defined(SEN_GAS) || \
-	defined(SEN_PRESSURE)
+	defined(SEN_PRESSURE) || defined(SEN_ACC)
 
 #define SENSORS_SUPPORTED
 #include "sensor_drv.h"
