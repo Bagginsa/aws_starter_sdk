@@ -20,5 +20,6 @@ libsensors-objs-y += \
 	src/grove/sensor_th_drv.c \
 	src/grove/sensor_tempr_drv.c \
 	src/grove/sensor_acc_drv.c \
+	src/grove/sensor_ultrasonic_drv.c \
 
 libsensors-cflags-y := -I $(d)/src -I $(d)/incl/grove -I $(d)/incl/generic

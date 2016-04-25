@@ -39,7 +39,7 @@
 
 #if defined(SEN_OCC) || defined(SEN_TEMPR) || defined(SEN_LIGHT) || \
 	defined(SEN_TH) || defined(SEN_CO2) || defined(SEN_GAS) || \
-	defined(SEN_PRESSURE) || defined(SEN_ACC)
+	defined(SEN_PRESSURE) || defined(SEN_ACC) || defined(SEN_ULTRASONIC)
 
 #define SENSORS_SUPPORTED
 #include "sensor_drv.h"
@@ -51,6 +51,7 @@
 #include "sensor_co2_drv.h"
 #include "sensor_gas_drv.h"
 #include "sensor_acc_drv.h"
+#include "sensor_ultrasonic_drv.h"
 
 #endif
 
@@ -521,6 +522,9 @@ int main()
 #endif /* SEN_GAS */
 #ifdef SEN_ACC
 		acc_sensor_event_register();
+#endif /* SEN_ACC */
+#ifdef SEN_ULTRASONIC
+		ultrasonic_sensor_event_register();
 #endif /* SEN_ACC */
 	}
 #endif /* SENSORS_SUPPORTED */
