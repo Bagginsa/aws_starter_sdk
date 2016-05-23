@@ -39,6 +39,10 @@ ifeq ($(SEN_ACC),y)
 aws_starter_demo-cflags-y += -DSEN_ACC=1
 endif
 
+ifeq ($(SEN_ULTRASONIC),y)
+aws_starter_demo-cflags-y += -DSEN_ULTRASONIC=1
+endif
+
 # Applications could also define custom linker files if required using following:
 #aws_starter_demo-ld-y := /path/to/ldscript
 

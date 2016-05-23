@@ -27,7 +27,7 @@
 #define ULTRASONIC_SEN_IO	GPIO_22
 #define ULTRASONIC_SEN_IO_GPIO	GPIO22_GPIO22
 
-#define dly_in_usec(x)	os_thread_sleep(x);
+#define dly_in_usecs(x)	os_thread_sleep(x);
 /*
  *********************************************************
  **** Ultrasonic Sensor H/W Specific code
