@@ -24,10 +24,16 @@
 #include "sensor_drv.h"
 #include "sensor_ultrasonic_drv.h"
 
-#define ULTRASONIC_SEN_IO	GPIO_22
-#define ULTRASONIC_SEN_IO_GPIO	GPIO22_GPIO22
+#define ULTRASONIC_SEN_IO	GPIO_0
+#define ULTRASONIC_SEN_IO_GPIO	GPIO0_GPIO0
 
-#define dly_in_usecs(x)	os_thread_sleep(x);
+/* define this to test sensor w/o cloud */
+#undef ULTRASONIC_SENSOR_TEST
+
+#ifdef ULTRASONIC_SENSOR_TEST
+void check_ultrasonic_sensor(void);
+#endif /* ULTRASONIC_SENSOR_TEST */
+
 /*
  *********************************************************
  **** Ultrasonic Sensor H/W Specific code
@@ -66,6 +72,10 @@ int ultrasonic_sensor_init(struct sensor_info *curevent)
 	pinmux_drv_close(pinmux_dev);
 	gpio_drv_close(gpio_dev);
 
+#ifdef ULTRASONIC_SENSOR_TEST
+	check_ultrasonic_sensor();
+#endif /* ULTRASONIC_SENSOR_TEST */
+
 	return 0;
 }
 
@@ -82,7 +92,8 @@ int ultrasonic_sensor_input_scan(struct sensor_info *curevent)
 {
 	int val;
 	mdev_t *gpio_dev;
-	int duration = 0;
+	unsigned int duration = 0;
+	unsigned int fduration = 0;
 
 	/* Open GPIO driver */
 	gpio_dev = gpio_drv_open("MDEV_GPIO");
@@ -99,27 +110,49 @@ int ultrasonic_sensor_input_scan(struct sensor_info *curevent)
 
 	/* Send a pulse */
 	gpio_drv_write(gpio_dev, ULTRASONIC_SEN_IO, 0);
-	dly_in_usecs(2);
+	os_thread_sleep(1);
 	gpio_drv_write(gpio_dev, ULTRASONIC_SEN_IO, 1);
-	dly_in_usecs(5);
+	os_thread_sleep(1);
 	gpio_drv_write(gpio_dev, ULTRASONIC_SEN_IO, 0);
 
 	/* Confiugre GPIO pin direction as Input */
 	gpio_drv_setdir(gpio_dev, ULTRASONIC_SEN_IO, GPIO_INPUT);
-	do {
-		duration++;
-		/* Read sensor GPIO level */
-		gpio_drv_read(gpio_dev, ULTRASONIC_SEN_IO, &val);
-		dly_in_usecs(1);
 
-	} while (!val);
+	/* Check the line is low */
+	while(1) {
+		gpio_drv_read(gpio_dev, ULTRASONIC_SEN_IO, &val);
+		if (!val)
+			break;
+	};
+
+	/* Check the line is going high */
+	while(1) {
+		gpio_drv_read(gpio_dev, ULTRASONIC_SEN_IO, &val);
+		if (val)
+			break;
+	};
+	duration = os_get_timestamp(); /* start pulse width measurement */
+
+	/* Check the line is going low */
+	while(1) {
+		gpio_drv_read(gpio_dev, ULTRASONIC_SEN_IO, &val);
+		if (!val)
+			break;
+	};
+	fduration = os_get_timestamp(); /* stop pulse width measurement */
+
+	if (fduration > duration) {
+		duration = fduration - duration; /* distance in usec */
+		/* Calibrate distance measured in centimeters */
+		duration /= 29;
+		duration /= 2;
+
+		wmprintf("%s senval=%d cm\r\n", __FUNCTION__, duration);
+		sprintf(curevent->event_curr_value, "%d cm", duration);
+	}
 
 	gpio_drv_close(gpio_dev);
 
-
-	/* for testing purpose only, need calibration to be done */
-	dbg("%s senval=%d\r\n", __FUNCTION__, duration);
-	sprintf(curevent->event_curr_value, "%d", duration);
 	return 0;
 }
 
@@ -133,4 +166,14 @@ int ultrasonic_sensor_event_register(void)
 {
 	return sensor_event_register(&event_ultrasonic_sensor);
 }
+
+#ifdef ULTRASONIC_SENSOR_TEST
+void check_ultrasonic_sensor(void)
+{
+	while(1) {
+		ultrasonic_sensor_input_scan(&event_ultrasonic_sensor);
+		os_thread_sleep(1000);
+	}
+}
+#endif /* ULTRASONIC_SENSOR_TEST */
 
