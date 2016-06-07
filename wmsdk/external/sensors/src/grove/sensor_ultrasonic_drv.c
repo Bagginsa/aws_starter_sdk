@@ -148,7 +148,7 @@ int ultrasonic_sensor_input_scan(struct sensor_info *curevent)
 		duration /= 2;
 
 		wmprintf("%s senval=%d cm\r\n", __FUNCTION__, duration);
-		sprintf(curevent->event_curr_value, "%d cm", duration);
+		sprintf(curevent->event_curr_value, "%d", duration);
 	}
 
 	gpio_drv_close(gpio_dev);
